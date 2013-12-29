@@ -15,8 +15,8 @@ end
 module Ohsoji
   class CLI < Thor
 
-    desc "twitter", "ohsoji twitter"
-    def twitter
+    desc "unfollow", "ohsoji twitter friends"
+    def unfollow
       friends.each do |id|
         unless listed_users.include?(id)
           puts id
@@ -36,8 +36,19 @@ module Ohsoji
       end
     end
 
-    desc "keep", "keep user"
-    def keep
+    desc "follow", "follow list user"
+    def follow
+      Proc.new do
+        follow_list_users
+      end.retry(
+        max: 3,
+        wait: 60 * 60,
+        accept_exception: Twitter::Error::TooManyRequests
+      )
+    end
+
+    private
+    def follow_list_users
       listed_users.each do |id|
         unless friends.include?(id)
           puts id
@@ -51,7 +62,6 @@ module Ohsoji
       end
     end
 
-    private
     def friends
       @friends ||= tw.friend_ids
     end
